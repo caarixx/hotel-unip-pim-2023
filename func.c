@@ -4,7 +4,7 @@
 int politicas_cancelamento(){
     printf("====Políticas de Cancelamento====\n\n");
     printf("As politicas de cancelamento de um hotel são importantes para garantir os direitos e deveres dos hóspedes e do estabelecimento. No caso de desistência da reserva, o hóspede deve comunicar ao hotel com antecedência mínima de 5 dias do check in, para ter direito a um estorno de 30% do valor pago.\n");
-    printf("Caso o cancelamento seja feito em um prazo menor que 5 dias, o hotel poderá reter o valor integral da reserva, como forma de compensação pela indisponibilidade do quarto para outros clientes.\n");
+    printf("Caso o cancelamento seja feito em um prazo menor que 5 dias, o hotel poderá reter o valor integral da reserva, como forma de compensação pela indisponibilidade do quarto para outros clientes.\nPara não haver prejuízo em nenhuma das partes, uma opção viável será a troca do tipo de quarto ou alterar a data de check-in para uma data posteiror, porém dentro do mesmo ano.\n");
     printf("O estorno será feito na mesma forma de pagamento utilizada na reserva, em até 10 dias úteis após a confirmação do cancelamento. \n");
     printf("O hotel se reserva o direito de alterar as politicas de cancelamento a qualquer momento, sem aviso prévio, devendo informar aos hóspedes sobre as novas condições no momento da reserva.\n");
     printf("\nPara efetuar o cancelamento da sua reserva, acesse [Minhas Reservas] no menu inicial!\n");

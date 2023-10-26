@@ -25,6 +25,24 @@
         }
     }
 
+    void getCheckinAndCheckoutDates(int *checkin_day, int *checkin_month, int *checkin_year, int *checkout_day, int *checkout_month, int *checkout_year) {
+    printf("Digite a data de check-in (dia mês ano): ");
+    scanf("%d %d %d", checkin_day, checkin_month, checkin_year);
+    fflush(stdin);
+
+    printf("Digite a data de check-out (dia mês ano): ");
+    scanf("%d %d %d", checkout_day, checkout_month, checkout_year);
+    fflush(stdin);
+
+    int days = days_between_dates(*checkin_year, *checkin_month, *checkin_day, *checkout_year, *checkout_month, *checkout_day);
+
+    if (days >= 0) {
+        printf("Número total de diárias atualizado é: %d\n", days);
+    } else {
+        printf("A data de check-out deve ser posterior à data de check-in.\n");
+    }
+}
+
     int days_between = days_checkout - days_checkin + days_in_years;
 
     return days_between;
@@ -34,14 +52,17 @@
         int ja_cadastrado_luxo1;
         int ja_cadastrado_luxo2;
         int ja_cadastrado_luxo3;
+        int ja_cadastrado_luxo4;
 
         int ja_cadastrado_suite1;
         int ja_cadastrado_suite2;
         int ja_cadastrado_suite3;
+        int ja_cadastrado_suite4;
 
         int ja_cadastrado_standard1;
         int ja_cadastrado_standard2;
         int ja_cadastrado_standard3;
+        int ja_cadastrado_standard4;
     };
 
     struct hospede{
@@ -118,11 +139,19 @@ int main()
 
     char numero_cartao[19], data_validade[7], codigo_seguranca_cartao[3];
 
-    float fat_suite = 0, fat_standard = 0, fat_total,  fat_luxo = 0;
+    char nome_administrador_relatorio[100], nome_admin_reserva[100];
 
-    int menu_voltar, resp_info, resp_relatorio, resp_numero_quarto, resp_minhas_reservas, resp_minhas_reservas_num, resp_cancelamento;
+    float fat_suite = 0, fat_standard = 0, fat_total,  fat_luxo = 0, fat_reserva_luxo = 0, fat_reserva_suite = 0, fat_reserva_standard = 0;
 
-    int num_diarias_luxo1 = 0, num_diarias_luxo2 = 0, num_diarias_luxo3 = 0, num_diarias_suite1 = 0, num_diarias_suite2 = 0, num_diarias_suite3 = 0, num_diarias_standard1 = 0, num_diarias_standard2 = 0, num_diarias_standard3 = 0;
+    int fat_luxo1_att, fat_luxo2_att, fat_luxo3_att;
+
+    int padrao_quarto_reservas_luxo, padrao_num_diarias_luxo, padrao_quarto_reservas_suite, padrao_num_diarias_suite, padrao_quarto_reservas_standard, padrao_num_diarias_standard;
+
+    int num_diarias_qreserva_luxo = 0, num_diarias_qreserva_suite = 0, num_diarias_qreservas_standard = 0;
+
+    int menu_voltar, resp_info, resp_relatorio, resp_numero_quarto, resp_minhas_reservas, resp_minhas_reservas_num, resp_cancelamento, resp_senha_admin, resp_senha_reserva, resp_usuario, resp_alteracao_reserva, resp_muda_quarto, res_quarto_reserva, resp_reserva_sim_nao, resp_reser_tipoq, resp_tipoq_mreservas;
+
+    int num_diarias_luxo1 = 0, num_diarias_luxo2 = 0, num_diarias_luxo3 = 0, num_diarias_suite1 = 0, num_diarias_suite2 = 0, num_diarias_suite3 = 0, num_diarias_standard1 = 0, num_diarias_standard2 = 0, num_diarias_standard3 = 0, num_diarias_luxo4 = 0, num_diarias_suite4 = 0, num_diarias_standard4 = 0;
     int total_quartos_reservados_luxo = 0, total_quartos_reservados_suite = 0, total_quartos_reservados_standard = 0, total_quartos_reservados = 0;
     int num_total_diarias_luxo = 0, num_total_diarias_suite = 0, num_total_diarias_standard = 0;
 
@@ -135,14 +164,17 @@ int main()
     cadastrados.ja_cadastrado_luxo1 = 0;
     cadastrados.ja_cadastrado_luxo2 = 0;
     cadastrados.ja_cadastrado_luxo3 = 0;
+    cadastrados.ja_cadastrado_luxo4 = 0;
 
     cadastrados.ja_cadastrado_suite1 = 0;
     cadastrados.ja_cadastrado_suite2 = 0;
     cadastrados.ja_cadastrado_suite3 = 0;
+    cadastrados.ja_cadastrado_suite4 = 0;
 
     cadastrados.ja_cadastrado_standard1 = 0;
     cadastrados.ja_cadastrado_standard2 = 0;
     cadastrados.ja_cadastrado_standard3 = 0;
+    cadastrados.ja_cadastrado_standard4 = 0;
 
 
     struct registro registros;
@@ -153,12 +185,11 @@ int main()
 
         printf("Por favor, escolha uma das opções de serviço:\n");
 
-        printf("[1] Minhas Reservas\n");// ultimo(incluir opção de cancelamento)
-        printf("[2] Nova Reserva\n"); // primeiro
-        printf("[3] Reservas por Administradores\n");
-        printf("[4] Informações Gerais\n");
-        printf("[5] Gerar Relatórios\n"); //ultimo
-        printf("[6] Sair\n\n");
+        printf("[1] Minhas Reservas\n");// ultimo(incluir opção de cancelamento) ok
+        printf("[2] Nova Reserva\n"); // primeiro ok
+        printf("[3] Informações Gerais\n"); //ok
+        printf("[4] Gerar Relatórios\n"); //ok
+        printf("[5] Sair\n\n");//ok
 
         scanf("%d", &opcao.resposta_menu);
         fflush(stdin);
@@ -178,283 +209,496 @@ int main()
                 switch(resp_minhas_reservas){//d começo
 
                     case 7 :
+                            resp_minhas_reservas_num = 0;
                             printf("Seu quarto reservado foi o Quarto de Luxo.\n\n");
                             printf("Informe o número do quarto reservado (1 ao 3):  ");
                             scanf("%d", &resp_minhas_reservas_num);
                             fflush(stdin);
 
-                                switch (resp_minhas_reservas_num) {//ba começo
+                            if(resp_minhas_reservas_num > 3 && resp_minhas_reservas_num != 10){
+                                printf("\nQuarto inválido!\n");
+                                continuar = 1;
+                            } else {//começo else caso numero errado luxo
+
+                            padrao_quarto_reservas_luxo = 0;
+                            padrao_num_diarias_luxo = 0;
+
+                            if(resp_minhas_reservas_num == 1){//começo p
+                                padrao_quarto_reservas_luxo = cadastrados.ja_cadastrado_luxo1;
+                                padrao_num_diarias_luxo = num_diarias_luxo1;
+                            };//fim p
+                            if (resp_minhas_reservas_num == 2){
+                                padrao_quarto_reservas_luxo = cadastrados.ja_cadastrado_luxo2;
+                                padrao_num_diarias_luxo = num_diarias_luxo2;
+                            };
+                            if(resp_minhas_reservas_num == 3){
+                                padrao_quarto_reservas_luxo = cadastrados.ja_cadastrado_luxo3;
+                                padrao_num_diarias_luxo = num_diarias_luxo3;
+                            };
+                            if(resp_minhas_reservas_num == 10){
+                                padrao_quarto_reservas_luxo = cadastrados.ja_cadastrado_luxo4;
+                                padrao_num_diarias_luxo = num_diarias_luxo4;};
+
+                            if(padrao_quarto_reservas_luxo == 0){//ma começo
+                                    printf("\nNão há reserva nesse quarto!\nPressione qualquer tecla para voltar ao menu incial.\n");
+                                    getch();
+                                    continuar = 1;
+                            }//ma fim
+                                else {
+                                    printf("Escolha uma das opções de serviço:\n[1] Mudar check-in e check-out e/ou Mudar opção de quarto.\n[2] Cancelar reserva.\n");
+                                    scanf("%d", &resp_alteracao_reserva);
+                                    fflush(stdin);
+
+                                    switch(resp_alteracao_reserva){//mb começo
+                                    case 1:
+                                        printf("\nDeseja alterar data check-in e check-out?\n[1] Sim.\n[2] Não.\n");
+                                        scanf("%d", &resp_reserva_sim_nao);
+                                        fflush(stdin);
+
+                                        if(resp_reserva_sim_nao == 1){//mc começo
+                                                padrao_num_diarias_luxo = 0;
+
+                                                printf("Digite a nova data de check-in (dia mês ano): ");
+                                                scanf("%d %d %d", &checkin_day, &checkin_month, &checkin_year);
+                                                fflush(stdin);
+
+                                                printf("Digite a nova data de check-out (dia mês ano): ");
+                                                scanf("%d %d %d", &checkout_day, &checkout_month, &checkout_year);
+                                                fflush(stdin);
+
+
+                                                int days = days_between_dates(checkin_year, checkin_month, checkin_day, checkout_year, checkout_month, checkout_day);
+
+                                                if (days >= 0) {
+                                                    printf("Número total de diárias atualizado é: %d\n", days);
+                                                } else {
+                                                    printf("A data de check-out deve ser posterior à data de check-in.\n");
+                                                };
+
+                                                padrao_num_diarias_luxo = days;
+                                                printf("\nA diferença será acertada no ato do check-in!\n");
+                                        }//mc fim
+                                            else {
+                                                    printf("\nData de check-in e check-out não alterada\n");};
+
+
+                                        printf("\nDeseja alterar o tipo de quarto?\n[1] Sim.\n[2] Não.\n");
+                                        scanf("%d", &resp_reser_tipoq);
+                                        fflush(stdin);
+
+                                        if (resp_reser_tipoq == 1){//md começo
+                                                printf("\nPara o seu conhecimento estará sendo realocado para um dos nossos quartos reservas, para que não haja conflito na disponibilidade dos quartos principais.\n *Não há diferença entre os serviços oferecidos dos quartos principais para os reservas*\n");
+                                                printf("\nPara qual tipo de quarto deseja alterar?\n[1] Quarto Suite.\n[2] Quarto standard.\n");
+                                                scanf("%d", &resp_tipoq_mreservas);
+
+                                                    if (resp_tipoq_mreservas == 1){//ec começo
+                                                            if(cadastrados.ja_cadastrado_suite4 == 0){//ee começo
+                                                            padrao_quarto_reservas_luxo = 0;
+                                                            cadastrados.ja_cadastrado_suite4 = 1;
+
+                                                            num_diarias_qreserva_suite = 0;
+                                                            num_diarias_qreserva_suite = padrao_num_diarias_luxo;
+                                                            padrao_num_diarias_luxo = 0;
+                                                            printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 11 Suite, Quarto reserva.\n");
+                                                            printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
+                                                            getch();
+                                                            continuar = 1;
+                                                            }//ee fim
+                                                                else{
+                                                                    printf("Quarto reserva não disponível!");
+                                                                };
+                                                    }//ec fim
+                                                        else if(resp_tipoq_mreservas == 2){//ef começo
+                                                            if(cadastrados.ja_cadastrado_standard4 == 0){//eg começo
+                                                                padrao_quarto_reservas_luxo = 0;
+                                                                cadastrados.ja_cadastrado_standard4 = 1;
+
+                                                                num_diarias_qreservas_standard = 0;
+                                                                num_diarias_qreservas_standard = padrao_num_diarias_luxo;
+                                                                padrao_num_diarias_luxo = 0;
+                                                                printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 12 Standard, Quarto reserva.\n");
+                                                                printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
+                                                                getch();
+                                                                continuar = 1;
+                                                            }//eg fim
+                                                            else{
+                                                                    printf("Quarto reserva não disponível!");};
+                                                        }//ef fim
+                                                        else {
+                                                            printf("Opção inválida!\n");
+                                                            continuar = 1;};
+                                        }//md fim
+                                         else {
+                                                printf("Tipo de quarto não alterado!\n");};
+                                    break;
+                                    case 2:
+                                        printf("\nNão se esqueça de verificar as políticas de cancelamento\n");
+                                        padrao_quarto_reservas_luxo = 0;
+                                        padrao_num_diarias_luxo = 0;
+                                        printf("\nCancelamento efetuado com sucesso!\n\n");
+                                        printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
+                                        printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                        getch();
+                                        continuar = 1;
+                                    break;
+                                    default:
+                                        printf("Opção inválida!");
+                                        printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                        getch();
+                                        continuar = 1;
+
+
+                                    };//mb fim
+                                };//else fim
+
+                            if(resp_minhas_reservas_num == 1){
+                                cadastrados.ja_cadastrado_luxo1 = padrao_quarto_reservas_luxo;
+                                num_diarias_luxo1 = padrao_num_diarias_luxo;
+                            };
+                            if (resp_minhas_reservas_num == 2){
+                                cadastrados.ja_cadastrado_luxo2 = padrao_quarto_reservas_luxo;
+                                num_diarias_luxo2 = padrao_num_diarias_luxo;
+                            };
+                            if(resp_minhas_reservas_num == 3){
+                                cadastrados.ja_cadastrado_luxo3 = padrao_quarto_reservas_luxo;
+                                num_diarias_luxo3 = padrao_num_diarias_luxo;
+                            };
+                            if(resp_minhas_reservas_num == 10){
+                                cadastrados.ja_cadastrado_luxo4 = padrao_quarto_reservas_luxo;
+                                num_diarias_luxo4 = padrao_num_diarias_luxo;};
+
+                            };//fim else caso numero errado luxo
+
+//////////////////////////FIM MINHAS RESERVAS LUXO ///////////////////////////////////////////
+
+                break;
+                case 8:
+                    resp_minhas_reservas_num = 0;
+                    printf("Seu quarto reservado foi o Quarto Suite.\n\n");
+                    printf("Informe o número do quarto reservado (4 ao 6):  ");
+                    scanf("%d", &resp_minhas_reservas_num);
+                    fflush(stdin);
+
+                    if(resp_minhas_reservas_num < 4 && resp_minhas_reservas_num > 6 && resp_minhas_reservas_num != 11){
+                        printf("\nQuarto inválido!\n");
+                        continuar = 1;
+                    } else {//oa começo
+
+                    padrao_quarto_reservas_suite = 0;
+                    padrao_num_diarias_suite = 0;
+
+                    if(resp_minhas_reservas_num == 4){//começo p
+                        padrao_quarto_reservas_suite = cadastrados.ja_cadastrado_suite1;
+                        padrao_num_diarias_suite = num_diarias_suite1;
+                    };//fim p
+                    if (resp_minhas_reservas_num == 5){
+                        padrao_quarto_reservas_suite = cadastrados.ja_cadastrado_suite2;
+                        padrao_num_diarias_suite = num_diarias_suite2;
+                    };
+                    if(resp_minhas_reservas_num == 6){
+                        padrao_quarto_reservas_suite = cadastrados.ja_cadastrado_suite3;
+                        padrao_num_diarias_suite = num_diarias_suite3;
+                    };
+                    if(resp_minhas_reservas_num == 11){
+                        padrao_quarto_reservas_suite = cadastrados.ja_cadastrado_suite4;
+                        padrao_num_diarias_suite = num_diarias_suite4;};
+
+                    if(padrao_quarto_reservas_suite == 0){//ob começo
+                            printf("\nNão há reserva nesse quarto!\nPressione qualquer tecla para voltar ao menu incial.\n");
+                            getch();
+                            continuar = 1;
+                    }//ob fim
+                        else {//oc começo
+                                printf("Escolha uma das opções de serviço:\n[1] Mudar check-in e check-out e/ou Mudar opção de quarto.\n[2] Cancelar reserva.\n");
+                                scanf("%d", &resp_alteracao_reserva);
+                                fflush(stdin);
+
+                                switch(resp_alteracao_reserva){//od começo switch
                                 case 1:
-                                    if(cadastrados.ja_cadastrado_luxo1 == 1){//bb começo
-                                            printf("Deseja cancelar sua reserva?\n");
-                                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
+                                    printf("\nDeseja alterar data check-in e check-out?\n[1] Sim.\n[2] Não.\n");
+                                    scanf("%d", &resp_reserva_sim_nao);
+                                    fflush(stdin);
 
-                                            printf("Digite [1] para confirmar o cancelamento.\n");
-                                            printf("Digite [2] para não efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                            scanf("%d", &resp_cancelamento);
-                                            fflush(stdin);
+                                    if(resp_reserva_sim_nao == 1){//oe começo
+                                        padrao_num_diarias_suite = 0;
 
-                                                switch(resp_cancelamento){//bc começo
-                                                case 1:
-                                                    cadastrados.ja_cadastrado_luxo1 = 0;
-                                                    printf("Cancelamento efetuado com sucesso!\n\n");
-                                                    printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                                    printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                        printf("Digite a nova data de check-in (dia mês ano): ");
+                                        scanf("%d %d %d", &checkin_day, &checkin_month, &checkin_year);
+                                        fflush(stdin);
+
+                                        printf("Digite a nova data de check-out (dia mês ano): ");
+                                        scanf("%d %d %d", &checkout_day, &checkout_month, &checkout_year);
+                                        fflush(stdin);
+
+                                        int days = days_between_dates(checkin_year, checkin_month, checkin_day, checkout_year, checkout_month, checkout_day);
+
+                                        if (days >= 0) {
+                                            printf("Número total de diárias atualizado é: %d\n", days);
+                                        } else {
+                                            printf("A data de check-out deve ser posterior à data de check-in.\n");
+                                        };
+
+                                        padrao_num_diarias_suite = days;
+                                        printf("\nA diferença será acertada no ato do check-in!\n");
+                                    }//oe fim
+                                        else {//of começo
+                                            printf("\nData de check-in e check-out não alterada\n");};//of fim
+
+                                printf("\nDeseja alterar o tipo de quarto?\n[1] Sim.\n[2] Não.\n");
+                                scanf("%d", &resp_reser_tipoq);
+                                fflush(stdin);
+
+                                if (resp_reser_tipoq == 1){//og começo
+                                    printf("\nPara qual tipo de quarto deseja alterar?\n[1] Quarto de Luxo.\n[2] Quarto standard.\n");
+                                    scanf("%d", &resp_tipoq_mreservas);
+
+                                    if (resp_tipoq_mreservas == 1){//oh começo
+                                            if(cadastrados.ja_cadastrado_luxo4 == 0){//oi começo7
+                                                    padrao_quarto_reservas_suite = 0;
+                                                    cadastrados.ja_cadastrado_luxo4 = 1;
+
+                                                    num_diarias_qreserva_luxo = 0;
+
+                                                    num_diarias_qreserva_luxo = padrao_num_diarias_suite;
+                                                    padrao_num_diarias_suite = 0;
+                                                    printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 10 Luxo, Quarto reserva.\n");
+                                                    printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
                                                     getch();
                                                     continuar = 1;
-                                                break;
-                                                default:
+                                            }//oi fim
+                                                else {
+                                                    printf("Quarto reserva não disponível!");
+                                                };
+                                    }//oh fim
+                                    else if(resp_tipoq_mreservas == 2){//oj começo
+                                            if(cadastrados.ja_cadastrado_standard4 == 0){//ok começo
+                                                    padrao_quarto_reservas_suite = 0;
+                                                    cadastrados.ja_cadastrado_standard4 = 1;
+
+                                                    num_diarias_qreservas_standard = 0;
+
+                                                    padrao_num_diarias_suite = num_diarias_qreservas_standard;
+                                                    padrao_num_diarias_suite = 0;
+                                                    printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 12 Standard, Quarto reserva.\n");
+                                                    printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
+                                                    getch();
                                                     continuar = 1;
-                                                };//bc fim
-                                    }//bb fim
-                                        else {
-                                            printf("Não há reservas nesse quarto!");};
+                                                }//ok fim
+                                                else{
+                                                    printf("Quarto reserva não disponível!");};
+                                        }//oj fim
+                                    else {
+                                        printf("Opção inválida!\n");
+                                        continuar = 1;};
+                                    }//og fim
+                                    else {
+                                        printf("Tipo de quarto não alterado!\n");};
+
                                 break;
                                 case 2:
-                                    if(cadastrados.ja_cadastrado_luxo2 == 1){//bd começo
-                                            printf("Deseja cancelar sua reserva?\n");
-                                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
+                                    printf("\nNão se esqueça de verificar as políticas de cancelamento\n");
+                                    padrao_quarto_reservas_suite= 0;
+                                    padrao_num_diarias_suite = 0;
+                                    printf("\nCancelamento efetuado com sucesso!\n\n");
+                                    printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
+                                    printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                    getch();
+                                    continuar = 1;
 
-                                            printf("Digite [1] para confirmar o cancelamento.\n");
-                                            printf("Digite [2] para não efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                            scanf("%d", &resp_cancelamento);
-                                            fflush(stdin);
-
-                                            switch(resp_cancelamento){//be começo
-                                                case 1:
-                                                    cadastrados.ja_cadastrado_luxo2 = 0;
-                                                    printf("Cancelamento efetuado com sucesso!\n\n");
-                                                    printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                                    printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                                    getch();
-                                                    continuar = 1;
-                                                break;
-                                                default:
-                                                    continuar = 1;
-                                            };//be fim ok
-
-                                    }//bd fim
-                                        else {
-                                            printf("Não há reservas nesse quarto!");};
                                 break;
-                                case 3:
-                                    if(cadastrados.ja_cadastrado_luxo3 == 1){//bf começo
-                                            printf("Deseja cancelar sua reserva?\n");
-                                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
+                                default:
+                                    printf("Opção inválida!");
+                                    printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                    getch();
+                                    continuar = 1;
+                                };//od fim switch
+                        };//oc fim
 
-                                            printf("Digite [1] para confirmar o cancelamento.\n");
-                                            printf("Digite [2] para não efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                            scanf("%d", &resp_cancelamento);
-                                            fflush(stdin);
+                    if(resp_minhas_reservas_num == 4){
+                        cadastrados.ja_cadastrado_suite1 = padrao_quarto_reservas_suite;
+                        num_diarias_suite1 = padrao_num_diarias_suite;
+                    };
+                    if (resp_minhas_reservas_num == 5){
+                        cadastrados.ja_cadastrado_suite2= padrao_quarto_reservas_suite;
+                        num_diarias_suite2 = padrao_num_diarias_suite;
+                    };
+                    if(resp_minhas_reservas_num == 6){
+                        cadastrados.ja_cadastrado_suite3 = padrao_quarto_reservas_suite;
+                        num_diarias_suite3 = padrao_num_diarias_suite;
+                    };
+                    if(resp_minhas_reservas_num == 11){
+                        cadastrados.ja_cadastrado_suite4 = padrao_quarto_reservas_suite;
+                        num_diarias_suite4 = padrao_num_diarias_suite;};
+                    };//oa fim
 
-                                            switch(resp_cancelamento){//bg começo
-                                                case 1:
-                                                    cadastrados.ja_cadastrado_luxo3 = 0;
-                                                    printf("Cancelamento efetuado com sucesso!\n\n");
-                                                    printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                                    printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                                    getch();
-                                                    continuar = 1;
-                                                break;
-                                                default:
-                                                    continuar = 1;
-                                            };//bg fim
-                                    }//bf fim
-                                        else {
-                                            printf("Não há reservas nesse quarto!");};
-                                    break;
-                                    default:
-                                        printf("Opção inválida");
-                                        continuar = 1;
-                                };//ba fim ok
 
-                    break;
-                    case 8:
-                        printf("Seu quarto reservado foi o Quarto Suite.\n\n");
-                        printf("Informe o número do quarto reservado (4 ao 6):  ");
-                        scanf("%d", &resp_minhas_reservas_num);
-                        fflush(stdin);
-
-                        switch (resp_minhas_reservas_num){//bh começo
-                        case 4:
-                            if(cadastrados.ja_cadastrado_suite1 == 1){//bi começo
-                                    printf("Deseja cancelar sua reserva?\n");
-                                    printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                                    printf("Digite [1] para confirmar o cancelamento.\n");
-                                    printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                    scanf("%d", &resp_cancelamento);
-                                    fflush(stdin);
-
-                                    switch(resp_cancelamento){//BJ COMEÇO
-                                    case 1:
-                                        cadastrados.ja_cadastrado_suite1 = 0;
-                                        printf("Cancelamento efetuado com sucesso!\n\n");
-                                        printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                        printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                        getch();
-                                        continuar = 1;
-                                    break;
-                                    default:
-                                        continuar = 1;
-                                    };//BJ FIM ok
-                            }//bi fim ok
-                                else {
-                                    printf("Não há reservas nesse quarto!");};
-                        break;
-                        case 5:
-                            if(cadastrados.ja_cadastrado_suite2 == 1){//BK COMEÇO
-                                    printf("Deseja cancelar sua reserva?\n");
-                                    printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                                    printf("Digite [1] para confirmar o cancelamento.\n");
-                                    printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                    scanf("%d", &resp_cancelamento);
-                                    fflush(stdin);
-
-                                    switch(resp_cancelamento){//bl começo
-                                    case 1:
-                                        cadastrados.ja_cadastrado_suite2 = 0;
-                                        printf("Cancelamento efetuado com sucesso!\n\n");
-                                        printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                        printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                        getch();
-                                        continuar = 1;
-                                    break;
-                                    default:
-                                        continuar = 1;
-                                    };//bl fim ok
-                            }//BK FIM ok
-                                else {
-                                    printf("Não há reservas nesse quarto!");};
-                        break;
-                        case 6:
-                            if(cadastrados.ja_cadastrado_suite3 == 1){//bm começo
-                                    printf("Deseja cancelar sua reserva?\n");
-                                    printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                                    printf("Digite [1] para confirmar o cancelamento.\n");
-                                    printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                                    scanf("%d", &resp_cancelamento);
-                                    fflush(stdin);
-
-                                    switch(resp_cancelamento){//bn começo
-                                    case 1:
-                                        cadastrados.ja_cadastrado_suite3 = 0;
-                                        printf("Cancelamento efetuado com sucesso!\n\n");
-                                        printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                        getch();
-                                        continuar = 1;
-                                    break;
-                                    default:
-                                        continuar = 1;
-                                    };//bn fim
-                            }//bm fim
-                            else {
-                                    printf("Não há reservas nesse quarto!");};
-                        break;
-                        default:
-                            printf("Opção inválida");
-                            continuar = 1;
-
-                        }//bh fim ok
+//////////////////////////FIM MINHAS RESERVAS SUITE ///////////////////////////////////////
                 break;
                 case 9:
+                    resp_minhas_reservas_num = 0;
                     printf("Seu quarto reservado foi o Quarto Standard.\n\n");
                     printf("Informe o número do quarto reservado (7 ao 9):  ");
                     scanf("%d", &resp_minhas_reservas_num);
                     fflush(stdin);
 
-                    switch (resp_minhas_reservas_num){//bo começo
-                    case 7:
-                       if(cadastrados.ja_cadastrado_standard1 == 1){//bp começo
-                            printf("Deseja cancelar sua reserva?\n");
-                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                            printf("Digite [1] para confirmar o cancelamento.\n");
-                            printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                            scanf("%d", &resp_cancelamento);
-                            fflush(stdin);
-
-                            switch(resp_cancelamento){////bq começo
-                            case 1:
-                                cadastrados.ja_cadastrado_standard1 = 0;
-                                printf("Cancelamento efetuado com sucesso!\n\n");
-                                printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                getch();
-                                continuar = 1;
-                            break;
-                            default:
-                                continuar = 1;
-                            };//bq fim ok
-                       }//bp fim
-                        else {
-                            printf("Não há reservas nesse quarto!");};
-                    break;
-                    case 8:
-                        if(cadastrados.ja_cadastrado_standard2 == 1){//br começo
-                            printf("Deseja cancelar sua reserva?\n");
-                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                            printf("Digite [1] para confirmar o cancelamento.\n");
-                            printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                            scanf("%d", &resp_cancelamento);
-                            fflush(stdin);
-
-                            switch(resp_cancelamento){//bs começo
-                            case 1:
-                                cadastrados.ja_cadastrado_standard2 = 0;
-                                printf("Cancelamento efetuado com sucesso!\n\n");
-                                printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                getch();
-                                continuar = 1;
-                            break;
-                            default:
-                                continuar = 1;
-                            };//bs fim ok
-                        }//br fim
-                         else {
-                            printf("Não há reservas nesse quarto!");};
-                    break;
-                    case 9:
-                        if(cadastrados.ja_cadastrado_standard3 == 1){//bt começo
-                            printf("Deseja cancelar sua reserva?\n");
-                            printf("*Não se esqueça de verificar nossas políticas de cancelamento antes de finalizar seu cancelamento*\n\n");
-
-                            printf("Digite [1] para confirmar o cancelamento.\n");
-                            printf("Digite [2] para NÃO efetuar o cancelamento e voltar ao menu inicial.\n\n");
-                            scanf("%d", &resp_cancelamento);
-                            fflush(stdin);
-
-                            switch(resp_cancelamento){//bu começo
-                                case 1:
-                                cadastrados.ja_cadastrado_standard3 = 0;
-                                printf("Cancelamento efetuado com sucesso!\n\n");
-                                printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
-                                printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
-                                getch();
-                                continuar = 1;
-                            break;
-                            default:
-                                continuar = 1;
-                            };//bu fim
-                        }//bt fim
-                            else {
-                            printf("Não há reservas nesse quarto!");};
-
-                    break;
-                    default:
-                        printf("Opção inválida");
+                    if(resp_minhas_reservas_num < 7 && resp_minhas_reservas_num > 9 && resp_minhas_reservas_num != 12){//pa começo
+                            printf("\nQuarto inválido!\n");
                         continuar = 1;
+                    }//pa fim
+                    else {//pb começo
 
-                    };//bo fim ok
+                    padrao_quarto_reservas_standard = 0;
+                    padrao_num_diarias_standard = 0;
 
-            break;
-            default:
-                printf("Opção inválida!");
-                continuar = 1;
+                    if(resp_minhas_reservas_num == 7){//começo p
+                        padrao_quarto_reservas_standard = cadastrados.ja_cadastrado_standard1;
+                        padrao_num_diarias_standard = num_diarias_standard1;
+                    };//fim p
+                    if (resp_minhas_reservas_num == 8){
+                        padrao_quarto_reservas_standard = cadastrados.ja_cadastrado_standard2;
+                        padrao_num_diarias_standard = num_diarias_standard2;
+                    };
+                    if(resp_minhas_reservas_num == 9){
+                        padrao_quarto_reservas_standard = cadastrados.ja_cadastrado_standard3;
+                        padrao_num_diarias_standard = num_diarias_standard3;
+                    };
+                    if(resp_minhas_reservas_num == 12){
+                        padrao_quarto_reservas_standard = cadastrados.ja_cadastrado_standard4;
+                        padrao_num_diarias_standard = num_diarias_standard4;};
+
+                    if(padrao_quarto_reservas_standard == 0){//pc começo
+                            printf("\nNão há reserva nesse quarto!\nPressione qualquer tecla para voltar ao menu incial.\n");
+                            getch();
+                            continuar = 1;
+                    }//pc fim
+                        else{//pd começo
+                            printf("Escolha uma das opções de serviço:\n[1] Mudar check-in e check-out e/ou Mudar opção de quarto.\n[2] Cancelar reserva.\n");
+                            scanf("%d", &resp_alteracao_reserva);
+                            fflush(stdin);
+
+                            switch(resp_alteracao_reserva){//pe começo
+                            case 1:
+                                printf("\nDeseja alterar data check-in e check-out?\n[1] Sim.\n[2] Não.\n");
+                                scanf("%d", &resp_reserva_sim_nao);
+                                fflush(stdin);
+
+                                if(resp_reserva_sim_nao == 1){//pf começo
+                                        padrao_num_diarias_standard = 0;
+
+                                        printf("Digite a nova data de check-in (dia mês ano): ");
+                                        scanf("%d %d %d", &checkin_day, &checkin_month, &checkin_year);
+                                        fflush(stdin);
+
+                                        printf("Digite a nova data de check-out (dia mês ano): ");
+                                        scanf("%d %d %d", &checkout_day, &checkout_month, &checkout_year);
+                                        fflush(stdin);
+
+                                        int days = days_between_dates(checkin_year, checkin_month, checkin_day, checkout_year, checkout_month, checkout_day);
+
+                                        if (days >= 0) {
+                                            printf("Número total de diárias atualizado é: %d\n", days);
+                                        } else {
+                                            printf("A data de check-out deve ser posterior à data de check-in.\n");
+                                        };
+
+                                        padrao_num_diarias_standard = days;
+                                        printf("\nA diferença será acertada no ato do check-in!\n");
+                                }//pf fim
+                                else {
+                                        printf("\nData de check-in e check-out não alterada\n");};
+
+                                printf("\nDeseja alterar o tipo de quarto?\n[1] Sim.\n[2] Não.\n");
+                                scanf("%d", &resp_reser_tipoq);
+                                fflush(stdin);
+
+                                if (resp_reser_tipoq == 1){//pg começo
+                                    printf("\nPara qual tipo de quarto deseja alterar?\n[1] Quarto de Luxo.\n[2] Quarto Suite.\n");
+                                    scanf("%d", &resp_tipoq_mreservas);
+
+                                    if (resp_tipoq_mreservas == 1){
+                                        if(cadastrados.ja_cadastrado_luxo4 == 0){//oi começo7
+                                                padrao_quarto_reservas_standard = 0;
+                                                cadastrados.ja_cadastrado_luxo4 = 1;
+
+                                                num_diarias_qreserva_luxo = 0;
+
+                                                num_diarias_qreserva_luxo = padrao_num_diarias_standard;
+                                                padrao_num_diarias_standard = 0;
+                                                printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 10 Luxo, Quarto reserva.\n");
+                                                printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
+                                                getch();
+                                                continuar = 1;
+                                        }//oi fim
+                                            else {
+                                                printf("Quarto reserva não disponível!");};
+                                    }
+                                    else if(resp_tipoq_mreservas == 2){//ph começo
+                                            if(cadastrados.ja_cadastrado_suite4 == 0){//pi começo
+                                                    padrao_quarto_reservas_standard = 0;
+                                                    cadastrados.ja_cadastrado_suite4 = 1;
+
+                                                    num_diarias_qreserva_suite = 0;
+
+                                                    num_diarias_qreserva_suite = padrao_num_diarias_standard;
+
+                                                    padrao_num_diarias_standard = 0;
+                                                    printf("\nQuarto atualizado com sucesso!\nSeu novo quarto é o número 12 Standard, Quarto reserva.\n");
+                                                    printf("\nA diferença será acertada no ato do Check-in!\nPressione qualquer tecla para voltar ao menu inicial.\n");
+                                                    getch();
+                                                    continuar = 1;
+                                                }//pi fim
+                                                else{
+                                                    printf("Quarto reserva não disponível!");};
+                                }//ph fim
+                                    else {
+                                        printf("Opção inválida!\n");
+                                        continuar = 1;};
+                                }//pg fim
+                                else {
+                                    printf("Tipo de quarto não alterado!\n");};
+                            break;
+                            case 2:
+                                printf("\nNão se esqueça de verificar as políticas de cancelamento\n");
+                                padrao_quarto_reservas_standard = 0;
+                                padrao_num_diarias_standard = 0;
+                                printf("\nCancelamento efetuado com sucesso!\n\n");
+                                printf("Analisaremos as condições de estorno e daremos um retorno via e-mail cadastrado na reserva!\n\n");
+                                printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                getch();
+                                continuar = 1;
+
+                            break;
+                            default:
+                                printf("Opção inválida!");
+                                printf("Pressione qualquer tecla para retornar ao menu inicial!\n");
+                                getch();
+                                continuar = 1;
+                            };//pe fim
+
+                        };//pd fim
+
+                        if(resp_minhas_reservas_num == 7){
+                        cadastrados.ja_cadastrado_standard1 = padrao_quarto_reservas_standard;
+                        num_diarias_standard1 = padrao_num_diarias_standard;
+                        };
+                        if (resp_minhas_reservas_num == 8){
+                            cadastrados.ja_cadastrado_standard2= padrao_quarto_reservas_standard;
+                            num_diarias_standard2 = padrao_num_diarias_standard;
+                        };
+                        if(resp_minhas_reservas_num == 9){
+                            cadastrados.ja_cadastrado_standard3 = padrao_quarto_reservas_standard;
+                            num_diarias_standard3 = padrao_num_diarias_standard;
+                        };
+                        if(resp_minhas_reservas_num == 12){
+                            cadastrados.ja_cadastrado_standard4 = padrao_quarto_reservas_standard;
+                            num_diarias_standard4 = padrao_num_diarias_standard;};
+
+                    };//pb fim
+////////////////////////FIM MINHAS RESERVAS QUARTO STANDARD //////////////////////////////
+                break;
+                default:
+                    printf("Opção inválida!");
+                    continuar = 1;
 
                 };//d fim
 ///////////////////////////////////////////////// FIM MINHAS RESERVAS /////////////////////////////////////////////
@@ -462,7 +706,45 @@ int main()
 
             case 2:
                 //opção das novas reservas
-                printf("Por gentileza, escolha o seu quarto\n");
+
+                printf("Nova Reserva por:\n");
+                printf("[1] Administrador\n");
+                printf("[2] Usuário Padrão\n\n");
+                scanf("%d", &resp_usuario);
+                fflush(stdin);
+
+                switch (resp_usuario){//cb começo
+                case 1:
+                    printf("Por favor informe o login e a senha de administrador\n");
+                    printf("Login: ");
+                    gets(nome_admin_reserva);
+                    printf("\nSenha: ");
+                    scanf("%d", &resp_senha_reserva);
+                    fflush(stdin);
+
+                    if (resp_senha_reserva == 1234){
+                        printf("Reserva em nome do administrador: %s\n\n", nome_admin_reserva);
+                    }
+                        else {
+                            printf("Senha Inválida!\n");
+                            printf("\nNova Reserva atualizada para: *Usuário Padrão*");
+                            strcpy(nome_admin_reserva, "Usuário Padrão");
+                        };
+                break;
+                case 2:
+                    printf("\nReserva em nome de: Usuário Padrão");
+                    strcpy(nome_admin_reserva, "Usuário Padrão");
+
+                break;
+                default:
+                    printf("Opção inválida");
+                    continuar = 1;
+
+                };//cb fim
+
+                printf("\n\nNova Reserva por: %s", nome_admin_reserva);
+
+                printf("\nPor gentileza, escolha o seu quarto\n");
 
 
                 printf("Digite uma das opções de quarto: \n [7] Quarto de Luxo \n [8] Quarto Suíte \n [9] Quarto Standart \n");
@@ -528,29 +810,23 @@ int main()
 
                                                 printf("Após o pagamento envie o comprovante para o seguinte número: (016) 3030-3030\n\n");
 
-                                                printf("==== Pagamento efetuado com sucesso! =====\n\n");
+                                                printf("==== Pagamento efetuado com sucesso! =====\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        } else
-                                                    continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
 
                                             break;
                                             case 2 :
                                             printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                            printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                            scanf("%d", &menu_voltar);
-                                            fflush(stdin);
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                if(menu_voltar == 0) {
-                                                continuar = 1;
-                                                    } else
-                                                continuar = 1;
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
 
                                             break;
                                             case 3 :
@@ -560,10 +836,10 @@ int main()
                                                 printf("Informe a data de validade: ");
                                                 gets(data_validade);
 
-                                                printf("Informe o código de segurança do cartão: \n\n");
+                                                printf("Informe o código de segurança do cartão: ");
                                                 gets(codigo_seguranca_cartao);
 
-                                                printf("O valor total foi R$%.2f\n\n", hosp_luxo.total);
+                                                printf("\nO valor total foi R$%.2f\n\n", hosp_luxo.total);
                                                 printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                                 printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -594,6 +870,13 @@ int main()
                                                             printf("Opção Inválida!");
 
                                                     };//n fim
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
 
                                                 break;
                                                 default: {
@@ -603,27 +886,12 @@ int main()
 
                                         };//m fim
 
-                                        printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
-
-                                        if(menu_voltar == 0) {
-                                            continuar = 1;
-                                        } else
-                                            continuar = 1;
-
                                     }//l fim
                                     else {
                                             printf("Quarto não disponível.\n");};
 
                              };//k fim quarto 1 luxo
 
-                             ////////////////////////////
-                             /////////////////////////////
                              if (resp_numero_quarto == 2){//o começo
                                 if (cadastrados.ja_cadastrado_luxo2 == 0) {//p começo
                                         printf("Digite a data de check-in (dia mês ano): ");
@@ -668,29 +936,24 @@ int main()
 
                                                 printf("Após o pagamento envie o comprovante para o seguinte número: (016) 3030-3030\n\n");
 
-                                                printf("==== Pagamento efetuado com sucesso! =====\n\n");
+                                                printf("==== Pagamento efetuado com sucesso! =====\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 2:
-                                                printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 3:
                                                 printf("Informe o número do cartão (16 dígitos): ");
@@ -699,10 +962,10 @@ int main()
                                                 printf("Informe a data de validade: ");
                                                 gets(data_validade);
 
-                                                printf("Informe o código de segurança do cartão: \n\n");
+                                                printf("Informe o código de segurança do cartão: ");
                                                 gets(codigo_seguranca_cartao);
 
-                                                printf("O valor total foi R$%.2f\n\n", hosp_luxo.total);
+                                                printf("\nO valor total foi R$%.2f\n\n", hosp_luxo.total);
                                                 printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                                 printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -730,27 +993,20 @@ int main()
                                                         printf("Opção Inválida!");
 
                                                 };//r fim ok
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
 
-                                            break;
-                                            default: {
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+
+                                        break;
+                                        default: {
                                                     printf("Opção Inválida!");
                                                     continuar = 1;
                                                     };
                                         };//q fim
-
-                                         printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
-
-                                        if(menu_voltar == 0) {
-                                                continuar = 1;
-                                                    }
-                                                else
-                                                    continuar = 1;
 
                                 }//p fim
                                 else {
@@ -802,30 +1058,24 @@ int main()
 
                                                 printf("Após o pagamento envie o comprovante para o seguinte número: (016) 3030-3030\n\n");
 
-                                                printf("==== Pagamento efetuado com sucesso! =====\n\n");
+                                                printf("==== Pagamento efetuado com sucesso! =====\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 2:
-                                                printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
+                                                printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar =1;
+
                                             break;
                                             case 3:
                                                 printf("Informe o número do cartão (16 dígitos): ");
@@ -834,10 +1084,10 @@ int main()
                                                 printf("Informe a data de validade: ");
                                                 gets(data_validade);
 
-                                                printf("Informe o código de segurança do cartão: \n\n");
+                                                printf("Informe o código de segurança do cartão: ");
                                                 gets(codigo_seguranca_cartao);
 
-                                                printf("O valor total foi R$%.2f\n\n", hosp_luxo.total);
+                                                printf("\nO valor total foi R$%.2f\n\n", hosp_luxo.total);
                                                 printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                                 printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -865,28 +1115,19 @@ int main()
                                                         printf("Opção Inválida!");
 
                                                 };//v fim ok
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
 
-                                            break;
-                                            default: {
-                                                     printf("Opção Inválida!");
-                                                        continuar = 1;};
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                        };//u fim
-
-                                        printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
-
-                                        if(menu_voltar == 0) {
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
                                             continuar = 1;
-                                                }
-                                            else
-                                                continuar = 1;
 
+                                        break;
+                                        default: {
+                                                 printf("Opção Inválida!");
+                                                    continuar = 1;};
+                                        };//u fim
                                    }//t fim
                                    else {
                                         printf("Quarto não disponível.\n");
@@ -962,27 +1203,22 @@ int main()
 
                                                 printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 2:
                                                 printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                    } else
-                                                            continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 3:
                                                 printf("Informe o número do cartão (16 dígitos): ");
@@ -991,10 +1227,10 @@ int main()
                                                 printf("Informe a data de validade: ");
                                                 gets(data_validade);
 
-                                                printf("Informe o código de segurança do cartão: \n\n");
+                                                printf("Informe o código de segurança do cartão: ");
                                                 gets(codigo_seguranca_cartao);
 
-                                                printf("O valor total foi R$%.2f\n\n", hosp_suite.total);
+                                                printf("\nO valor total foi R$%.2f\n\n", hosp_suite.total);
                                                 printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                                 printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1021,25 +1257,18 @@ int main()
                                                         printf("Opção Inválida!");
 
                                                 };//aa fim ok
-                                            break;
-                                            default: {
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+                                        break;
+                                        default: {
                                                 printf("Opção Inválida!");
                                                 continuar = 1;};
                                         };//z fim
-
-                                        printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
-
-                                        if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                }
-                                            else
-                                                continuar = 1;
 
                                 }//y fim
                                 else {
@@ -1094,28 +1323,22 @@ int main()
 
                                                 printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                            else
-                                                                continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 2:
                                                 printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                                scanf("%d", &menu_voltar);
-                                                fflush(stdin);
+                                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                    if(menu_voltar == 0) {
-                                                    continuar = 1;
-                                                        }
-                                                        else
-                                                            continuar = 1;
+                                                printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                                getch();
+                                                continuar = 1;
+
                                             break;
                                             case 3:
                                                 printf("Informe o número do cartão (16 dígitos): ");
@@ -1124,10 +1347,10 @@ int main()
                                                 printf("Informe a data de validade: ");
                                                 gets(data_validade);
 
-                                                printf("Informe o código de segurança do cartão: \n\n");
+                                                printf("Informe o código de segurança do cartão: ");
                                                 gets(codigo_seguranca_cartao);
 
-                                                printf("O valor total foi R$%.2f\n\n", hosp_suite.total);
+                                                printf("\nO valor total foi R$%.2f\n\n", hosp_suite.total);
                                                 printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                                 printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1155,6 +1378,14 @@ int main()
                                                         printf("Opção Inválida!");
 
                                                 };//ae fim ok
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+
                                         break;
                                         default: {
                                             printf("Opção Inválida!");
@@ -1163,19 +1394,7 @@ int main()
 
                                         };//ad fim
 
-                                        printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
 
-                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
-
-                                        if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                }
-                                            else
-                                                continuar = 1;
                                 }//ac fim
                                     else {
                                         printf("Quarto não disponível.\n");
@@ -1230,28 +1449,22 @@ int main()
 
                                             printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                            printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                            scanf("%d", &menu_voltar);
-                                            fflush(stdin);
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                if(menu_voltar == 0) {
-                                                continuar = 1;
-                                                    }
-                                                        else
-                                                            continuar = 1;
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+
                                         break;
                                         case 2:
                                             printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                            printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                            scanf("%d", &menu_voltar);
-                                            fflush(stdin);
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                                if(menu_voltar == 0) {
-                                                continuar = 1;
-                                                    }
-                                                        else
-                                                            continuar = 1;
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+
                                         break;
                                         case 3:
                                             printf("Informe o número do cartão (16 dígitos): ");
@@ -1260,10 +1473,10 @@ int main()
                                             printf("Informe a data de validade: ");
                                             gets(data_validade);
 
-                                            printf("Informe o código de segurança do cartão: \n\n");
+                                            printf("Informe o código de segurança do cartão: ");
                                             gets(codigo_seguranca_cartao);
 
-                                            printf("O valor total foi R$%.2f\n\n", hosp_suite.total);
+                                            printf("\nO valor total foi R$%.2f\n\n", hosp_suite.total);
                                             printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                             printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1292,6 +1505,14 @@ int main()
 
                                             };//ai fim ok
 
+                                            printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                            printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                            printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                            getch();
+                                            continuar = 1;
+
                                         break;
                                         default: {
                                             printf("Opção Inválida!");
@@ -1299,20 +1520,6 @@ int main()
                                         };
 
                                     };//ah fim
-
-                                    printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                    printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                    printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                    scanf("%d", &menu_voltar);
-                                    fflush(stdin);
-
-                                    if(menu_voltar == 0) {
-                                        continuar = 1;
-                                            }
-                                        else
-                                            continuar = 1;
 
                             }//ag fim
 
@@ -1390,26 +1597,22 @@ int main()
 
                                         printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                }
-                                                    else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 2:
                                         printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                } else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 3:
                                         printf("Informe o número do cartão (16 dígitos): ");
@@ -1418,10 +1621,10 @@ int main()
                                         printf("Informe a data de validade: ");
                                         gets(data_validade);
 
-                                        printf("Informe o código de segurança do cartão: \n\n");
+                                        printf("Informe o código de segurança do cartão: ");
                                         gets(codigo_seguranca_cartao);
 
-                                        printf("O valor total foi R$%.2f\n\n", hosp_standart.total);
+                                        printf("\nO valor total foi R$%.2f\n\n", hosp_standart.total);
                                         printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                         printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1448,25 +1651,20 @@ int main()
                                             default :
                                                 printf("Opção Inválida!");
                                         };//an fim
+                                    printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                    printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                    printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                    getch();
+                                    continuar = 1;
+
                                     break;
                                     default: {
                                         printf("Opção Inválida!");
                                         continuar = 1;};
 
                                 };//am fim
-
-                                printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                scanf("%d", &menu_voltar);
-
-                                if(menu_voltar == 0) {
-                                    continuar = 1;
-                                        }
-                                    else
-                                        continuar = 1;
 
                             }//al fim
                              else {
@@ -1519,26 +1717,22 @@ int main()
 
                                         printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                } else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 2:
                                         printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                } else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 3:
                                         printf("Informe o número do cartão (16 dígitos): ");
@@ -1547,10 +1741,10 @@ int main()
                                         printf("Informe a data de validade: ");
                                         gets(data_validade);
 
-                                        printf("Informe o código de segurança do cartão: \n\n");
+                                        printf("Informe o código de segurança do cartão: ");
                                         gets(codigo_seguranca_cartao);
 
-                                        printf("O valor total foi R$%.2f\n\n", hosp_standart.total);
+                                        printf("\nO valor total foi R$%.2f\n\n", hosp_standart.total);
                                         printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                         printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1577,25 +1771,22 @@ int main()
                                                 printf("Opção Inválida!");
 
                                          };//ar fim ok
+                                         printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     default: {
                                         printf("Opção Inválida!");
                                         continuar = 1; };
 
                                 }//aq fim ok
-                                printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
 
-                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                scanf("%d", &menu_voltar);
-                                fflush(stdin);
-
-                                if(menu_voltar == 0) {
-                                    continuar = 1;
-                                        }
-                                    else
-                                        continuar = 1;
                         }//ap fim
                         else {
                             printf("Quarto não disponível.\n");
@@ -1649,28 +1840,22 @@ int main()
 
                                         printf("==== Pagamento efetuado com sucesso! =====\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                }
-                                                    else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 2:
                                         printf("==== Opção de pagamento registrado ==== \n\nNesta opção o pagamento deverá ser efetuado no ato do check-in\n\n");
 
-                                        printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                        scanf("%d", &menu_voltar);
-                                        fflush(stdin);
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
 
-                                            if(menu_voltar == 0) {
-                                            continuar = 1;
-                                                }
-                                                    else
-                                                        continuar = 1;
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
+
                                     break;
                                     case 3:
                                         printf("Informe o número do cartão (16 dígitos): ");
@@ -1679,10 +1864,10 @@ int main()
                                         printf("Informe a data de validade: ");
                                         gets(data_validade);
 
-                                        printf("Informe o código de segurança do cartão: \n\n");
+                                        printf("Informe o código de segurança do cartão: ");
                                         gets(codigo_seguranca_cartao);
 
-                                        printf("O valor total foi R$%.2f\n\n", hosp_standart.total);
+                                        printf("\nO valor total foi R$%.2f\n\n", hosp_standart.total);
                                         printf("Deseja dividir esse valor em quantas parcelas?\n\n");
                                         printf("[1] À vista \n[2] 2x sem juros \n[3] 3x sem juros\n");
 
@@ -1710,6 +1895,13 @@ int main()
                                                 printf("Opção Inválida!");
 
                                          };//av fim ok
+                                         printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
+
+                                        printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
+
+                                        printf("Por favor, pressione qualquer tecla para voltar ao menu incial\n");
+                                        getch();
+                                        continuar = 1;
 
                                     break;
                                     default: {
@@ -1719,19 +1911,6 @@ int main()
 
                                 };//au fim
 
-                                printf("\n\n====== Pagamento efetuado com sucesso =======\n\n");
-
-                                printf("Esta transação está assegurada pela Lei Geral de Proteção de Dados (LGPD)\n\n");
-
-                                printf("Por favor, digite [0] para voltar ao menu inicial\n");
-                                scanf("%d", &menu_voltar);
-                                fflush(stdin);
-
-                                if(menu_voltar == 0) {
-                                    continuar = 1;
-                                        }
-                                    else
-                                        continuar = 1;
                         }//at fim
 
                             else {
@@ -1758,20 +1937,10 @@ int main()
 
                 };//i fim switch tipo quarto
 
-        break;
-        case 3:
-            printf("Opção não finalizada\n\n");
-            printf("Por favor, digite [0] para voltar ao menu inicial!\n");
-            scanf("%d", &menu_voltar);
-            fflush(stdin);
-            if(menu_voltar == 0){
-                continuar = 1;
-            }else {
-                continuar = 1;
-            };
+/////////////////////////////////////////////FIM NOVAS RESERVAS /////////////////////////////////////////////////////////
 
         break;
-        case 4:
+        case 3:
             printf("\nPor favor, escolha uma das opções de informações gerais que deseja obter!\n\n");
             printf("[1] Políticas de Cancelamento\n");
             printf("[2] Lei Geral de Proteção de Dados(LGPD)\n");
@@ -1792,9 +1961,19 @@ int main()
                         continuar = 1;
                         };
                         }//fim switch resp info
-
+/////////////////////////////////////////////////FIM POLITICAS DE CANCELAMENTO ////////////////////////////////////////////////////
         break;
-        case 5:
+        case 4:
+            printf("Informe o Login de Administrador e a senha de Administrador\n\n");
+            printf("Login: ");
+            gets(nome_administrador_relatorio);
+            printf("\nSenha: ");
+            scanf("%d", &resp_senha_admin);
+            fflush(stdin);
+
+            if( resp_senha_admin == 1234){//ca começo
+                printf("\nRelatórios sendo gerados por: %s", nome_administrador_relatorio);
+
             printf("\n===== Relatórios =====\n\n");
             printf("[1] Faturamento.\n");
             printf("[2] Quartos Reservados.\n");
@@ -1815,13 +1994,32 @@ int main()
                         fat_standard = num_total_diarias_standard * hosp_standart_valor_diaria;
                         printf("\n\nO Faturamento do Quarto Standard é: R$%.2f", fat_standard);
 
-                        fat_total = fat_luxo + fat_suite + fat_standard;
-                        printf("\n\nO Faturamento Total é: R$%.2f\n", fat_total);
+                        fat_reserva_luxo = num_diarias_qreserva_luxo * hosp_luxo_valor_diaria;
+                        printf("\n\nO Faturamento do Quarto Reserva de Luxo é: R$%.2f", fat_reserva_luxo);
 
+                        fat_reserva_suite = num_diarias_qreserva_suite * hosp_suite_valor_diaria;
+                        printf("\n\nO Faturamento do Quarto Reserva Suite é: R$%.2f", fat_reserva_suite);
+
+                        fat_reserva_standard = num_diarias_qreservas_standard * hosp_standart_valor_diaria;
+                        printf("\n\nO Faturamento do Quarto Reserva Standard é: R$%.2f", fat_reserva_standard);
+
+                        fat_total = fat_luxo + fat_suite + fat_standard + fat_reserva_luxo + fat_reserva_standard + fat_reserva_suite;
+                        printf("\n\nO Faturamento Total é: R$%.2f\n", fat_total);
+                        printf("Relatório gerado sem a adição das taxas.\n");
+
+                        printf("\nRelatório Gerado por: %s\n\n", nome_administrador_relatorio);
+                        printf("Pressione qualquer tecla para voltar ao menu inicial.\n");
+                        getch();
                         continuar = 1;
+
                     break;
                     case 2:
                         printf("\n==== Relatório de Quartos Reservados ====\n\n");
+
+                        total_quartos_reservados_luxo = 0;
+                        total_quartos_reservados_standard =0;
+                        total_quartos_reservados_suite = 0;
+                        total_quartos_reservados = 0;
 
                         if (cadastrados.ja_cadastrado_luxo1 == 1){
                             total_quartos_reservados_luxo += 1;};
@@ -1829,8 +2027,10 @@ int main()
                         if (cadastrados.ja_cadastrado_luxo2 == 1){
                             total_quartos_reservados_luxo += 1;};
 
-
                         if (cadastrados.ja_cadastrado_luxo3 == 1){
+                            total_quartos_reservados_luxo += 1;};
+
+                        if(cadastrados.ja_cadastrado_luxo4 == 1){
                             total_quartos_reservados_luxo += 1;};
 
 
@@ -1843,6 +2043,9 @@ int main()
                         if (cadastrados.ja_cadastrado_standard3 == 1){
                             total_quartos_reservados_standard += 1;};
 
+                        if(cadastrados.ja_cadastrado_standard4 == 1){
+                            total_quartos_reservados_standard += 1;};
+
                         if (cadastrados.ja_cadastrado_suite1 == 1){
                             total_quartos_reservados_suite += 1;};
 
@@ -1850,6 +2053,9 @@ int main()
                             total_quartos_reservados_suite += 1;};
 
                         if (cadastrados.ja_cadastrado_suite3 == 1){
+                            total_quartos_reservados_suite += 1;};
+
+                        if(cadastrados.ja_cadastrado_suite4 == 1){
                             total_quartos_reservados_suite += 1;};
 
                         total_quartos_reservados = total_quartos_reservados_luxo + total_quartos_reservados_standard + total_quartos_reservados_suite;
@@ -1860,15 +2066,26 @@ int main()
 
                         printf("\n\nQuantidade de Reservas totais: %d", total_quartos_reservados);
 
+                        printf("\nRelatório Gerado por: %s\n\n", nome_administrador_relatorio);
+                        printf("Pressione qualquer tecla para voltar ao menu inicial.\n");
+                        getch();
                         continuar = 1;
+
                     break;
                     default:
                         printf("Escolha inválida");
                         continuar = 1;
                 };//aw fim
+            }//ca fim
+                else {
+                    printf("==Senha Inválida==\n\n");
+                    printf("Pressione qualquer tecla para voltar ao menu inicial.\n");
+                    getch();
+                    continuar = 1;
+                }
 
         break;
-        case 6:
+        case 5:
             continuar = 0;
 
         break;
