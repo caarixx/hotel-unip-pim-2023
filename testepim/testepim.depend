@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1698279076 source:c:\users\dcele\downloads\testepim\func.c
+	"func.h"
+	<stdio.h>
+
+1698111920 c:\users\dcele\downloads\testepim\func.h
+
+1698451178 source:c:\users\dcele\downloads\testepim\main.c
+	<stdio.h>
+	<stdlib.h>
+	<locale.h>
+	<string.h>
+	<time.h>
+	"func.h"
+	<conio.h>
+
